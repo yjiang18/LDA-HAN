@@ -2,7 +2,13 @@ import gensim
 import matplotlib.pyplot as plt
 import numpy as np
 import argparse
-from utils.datahelper import *
+from datahelper import Dataset
+import logging
+
+
+logging.basicConfig(format="%(asctime)s:%(levelname)s:%(message)s",
+                    level=logging.INFO)
+
 
 def compute_coherence_values(dictionary, corpus, texts, limit, start=2, step=3):
     """
@@ -79,7 +85,8 @@ def lda_train(rawtext, num_topics, if_train=False):
             print(lda.id2word[id], out, sep='\t', file=file)
 
             if count % 500 == 0:
-                print(count)
+                print("processed {word} words in total of {vocab} vocabulary".format(word=count, vocab=len(dictionary)))
+
 
 if __name__ == "__main__":
 
@@ -95,3 +102,5 @@ if __name__ == "__main__":
     dataset.data_reader(hierachical_data=args.H)
     raw_text = dataset.rawtext
     lda_train(raw_text, num_topics=args.T, if_train=args.train)
+
+    print("LDA embedding has been saved to ./embeddings ")

@@ -11,14 +11,19 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-train", default=True, type=bool, required=False, help="train model if true")
+    parser.add_argument("-train", default=None, type=bool, required=False, help="train model if true")
     parser.add_argument("-txt", default="this is a test", type=str, required=False, help="test activation maps")
     args = parser.parse_args()
 
-    model = LDA_HCAN()
     if args.train:
+        print("start to training")
+        model = LDA_HCAN()
         model.train()
+
     else:
+        print("start to predicting")
+
+        model = LDA_HCAN()
         model.load_weights(SAVED_MODEL_DIR, SAVED_MODEL_FILENAME)
 
         txt = args.txt
