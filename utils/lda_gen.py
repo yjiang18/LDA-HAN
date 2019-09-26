@@ -1,7 +1,8 @@
 import gensim
 import matplotlib.pyplot as plt
 import numpy as np
-
+import argparse
+from utils.datahelper import *
 
 def compute_coherence_values(dictionary, corpus, texts, limit, start=2, step=3):
     """
@@ -80,3 +81,17 @@ def lda_train(rawtext, num_topics, if_train=False):
             if count % 500 == 0:
                 print(count)
 
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("-train", default=False, type=bool, required=False, help="train the lda model if true")
+    parser.add_argument("-H", default=True, type=bool, required=False, help="if true data would be 3D for hierarchical model")
+    parser.add_argument("-T", default=300, type=int, required=False,
+                        help="number of topics for training lda model")
+    args = parser.parse_args()
+
+    dataset = Dataset()
+    dataset.data_reader(hierachical_data=args.H)
+    raw_text = dataset.rawtext
+    lda_train(raw_text, num_topics=args.T, if_train=args.train)
