@@ -2,7 +2,7 @@ import gensim
 import matplotlib.pyplot as plt
 import numpy as np
 import argparse
-from datahelper import Dataset
+from utils.datahelper import Dataset
 import logging
 
 
@@ -55,11 +55,11 @@ def lda_train(rawtext, num_topics, if_train=False):
                                            id2word=dictionary, iterations=1000,
                                            workers=7, passes=10, minimum_probability=1e-8,
                                            minimum_phi_value=1e-8)
-        dictionary.save('./lda_stuff/lda_model_T300.dictionary')
-        lda.save('./lda_stuff/lda_model_T300.model')
+        dictionary.save('./lda_stuff/lda_model_T425.dictionary')
+        lda.save('./lda_stuff/lda_model_T425.model')
 
     else:
-        lda = gensim.models.LdaMulticore.load("./lda_stuff/lda_model_T300.model")
+        lda = gensim.models.LdaMulticore.load("./lda_stuff/lda_model_T425.model")
 
 
     topics = lda.state.get_lambda()
@@ -76,16 +76,14 @@ def lda_train(rawtext, num_topics, if_train=False):
         doc_topic = [top_topics[i][1] for i in range(num_topics)]
         doc_topics.append(doc_topic)
 
-    with open('./word_topic_300_index.dict', 'wt') as file:
-        count = 0
-        for id in range(len(dictionary)):
-            count += 1
-            word_topics[lda.id2word[id]] = np.mean(topics_norm[id] * np.array(doc_topics), axis=0)
-            out = [i for i in word_topics[lda.id2word[id]]]
-            print(lda.id2word[id], out, sep='\t', file=file)
+    count = 0
+    for id in range(len(dictionary)):
+        count += 1
+        word_topics[lda.id2word[id]] =topics_norm[id]
+        if count % 500 == 0:
+            print("processed {word} words in total of {vocab} vocabulary".format(word=count, vocab=len(dictionary)))
 
-            if count % 500 == 0:
-                print("processed {word} words in total of {vocab} vocabulary".format(word=count, vocab=len(dictionary)))
+    return doc_topics, word_topics
 
 
 if __name__ == "__main__":

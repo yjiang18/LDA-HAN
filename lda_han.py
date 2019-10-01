@@ -13,6 +13,7 @@ import string
 from spacy.lang.en import English
 from utils.load_embedding import load_embedding
 from utils.normalize import normalize
+from utils.lda_gen import lda_train
 
 
 class Attention(Layer):
@@ -57,7 +58,7 @@ class LDA_HAN():
         self.output_dim = 1
 
     def _load_embeddings(self):
-        self.word_embedding, self.lda_embedding = load_embedding(self.tokenizer.word_index)
+        self.word_embedding, self.lda_embedding = load_embedding(self.tokenizer.word_index, self.topic_word_dict)
 
     def _build_model(self):
         sentence_in = Input(shape=(self.MAX_SENTENCE_LENGTH,), dtype='int32')
@@ -70,7 +71,7 @@ class LDA_HAN():
                                          name='word_embedding')
 
         self.lda_embedding_layer = Embedding(len(self.tokenizer.word_index) + 1,
-                                             300,
+                                             425,
                                              weights=[self.lda_embedding],
                                              trainable=True,
                                              mask_zero=False,
@@ -79,7 +80,7 @@ class LDA_HAN():
         embedded_word_seq = self.embedding_layer(sentence_in)  # (batch_size, seq_len, word_embed)
         embedded_topic_seq = self.lda_embedding_layer(sentence_in)  # (batch_size, seq_len, topic_embed)
 
-        topic_aware_embedding = Add()([embedded_word_seq, embedded_topic_seq])
+        topic_aware_embedding = Concatenate()([embedded_word_seq, embedded_topic_seq])
 
         # Generate word-attention-weighted sentence scores
 
@@ -94,10 +95,11 @@ class LDA_HAN():
 
         attention_weighted_sentence = Model(sentence_in, word_out)
         self.word_attention_model = attention_weighted_sentence
-        # attention_weighted_sentence.summary()
+        attention_weighted_sentence.summary()
 
         # Generate sentence-attention-weighted document scores
         texts_in = Input(shape=(self.MAX_SENTENCE_COUNT, self.MAX_SENTENCE_LENGTH,), dtype='int32')
+        doc_topics_in = Input(shape=(425,), dtype='float32')
 
         attention_weighted_sentences = TimeDistributed(attention_weighted_sentence)(texts_in)
 
@@ -111,34 +113,41 @@ class LDA_HAN():
 
         attention_weighted_text = Attention(name='sentence_attention')(dense_transform_s)
 
-        prediction = Dense(self.output_dim, activation='sigmoid')(attention_weighted_text)
-        self.model = Model(texts_in, prediction)
-        # self.model.summary()
+        final_concat = Concatenate()([attention_weighted_text, doc_topics_in])
+        prediction = Dense(self.output_dim, activation='sigmoid')(final_concat)
+        self.model = Model([texts_in, doc_topics_in], prediction)
+        self.model.summary()
 
         self.model.compile(optimizer=Adam(lr=0.001),loss='binary_crossentropy',metrics=['acc'])
 
-    def _load_data(self):
+    def _load_data(self, train_lda=False):
         dataset = Dataset()
         dataset.data_reader(hierachical_data=True)
         x, y, word_index, self.tokenizer = dataset.load_data(hierachical_data=True)
         with open("./checkpoints/lda_HAN_token.tokenizer", 'wb') as outfile:
             pickle.dump(self.tokenizer, outfile)
         outfile.close()
-        X_train, y_train, X_test, y_test = dataset.train_val_test(x, y, seed=1)
-        return X_train, y_train, X_test, y_test
+        raw_text = dataset.rawtext
+        doc_topics, self.topic_word_dict = lda_train(raw_text, num_topics=425, if_train=train_lda)
+        train_seq, train_doc_topics, y_train, \
+        test_seq, test_doc_topics, y_test = dataset.train_val_test(x, doc_topics, y)
 
-    def train(self):
-        X_train, y_train, X_test, y_test = self._load_data()
+        return np.array(train_seq), np.array(train_doc_topics), np.array(y_train), \
+               np.array(test_seq), np.array(test_doc_topics), np.array(y_test)
+
+    def train(self, train_lda=False):
+        train_seq, train_doc_topics, y_train, \
+        test_seq, test_doc_topics, y_test = self._load_data(train_lda=train_lda)
 
         self._load_embeddings()
         self._build_model()
-        self.model.fit(X_train, y_train, validation_split=.1,
+        self.model.fit(x=[train_seq, train_doc_topics], y=y_train, validation_split=.1,
                                  batch_size=32, epochs=15,
                                  callbacks=[ModelCheckpoint(filepath='./checkpoints/lda_HAN_best_1.h5',
                                           monitor='val_acc',
                                           verbose=1, save_best_only=True, mode='max'),
                                             CSVLogger('./history/lda_HAN_training_1.log')])
-        loss, acc = self.model.evaluate(X_test, y_test, verbose=1, batch_size=32)
+        loss, acc = self.model.evaluate(x=[test_seq, test_doc_topics], y=y_test, verbose=1, batch_size=32)
 
         print("Model test accuracy is : %s " % acc)
 

@@ -131,11 +131,15 @@ class Dataset(object):
 
             return seq, self.labels, word_index, self.tokenizer
 
-    def train_val_test(self, text, labels, seed):
+    def train_val_test(self, text, doc_topics, labels):
 
-        X_train, X_test, y_train, y_test = train_test_split(text, labels, test_size=0.1,
-                                                            random_state=seed)
+        x = list(zip(text, doc_topics))
 
-        return X_train, y_train,  X_test, y_test
+        X_train, X_test, y_train, y_test = train_test_split(x, labels, test_size=0.1, random_state=1)
+        train_seq, train_doc_topics = zip(*X_train)
+        test_seq, test_doc_topics = zip(*X_test)
+
+        return train_seq, train_doc_topics, y_train, \
+               test_seq, test_doc_topics, y_test
 
 
