@@ -27,6 +27,7 @@ All results are calculated by the mean of 10-fold cross validation five times on
 * Keras version 2.2.4
 * Gensim 3.8.0
 * Spacy version 2.1.16
+* flask 1.1.1
 
 Preparation steps:
 1. `mkdir checkpoints data embeddings history lda_stuff` for store trained models, training data set, glove & lda embeddings, training logs, gensim models respectively.
