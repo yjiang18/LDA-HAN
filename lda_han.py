@@ -177,7 +177,7 @@ class LDA_HAN():
         texts = np.array([normalize(text) for text in x])
         return self._encode_texts(texts)
 
-    def activation_maps(self, text, websafe=False):
+    def activation_maps(self, text, doc_topics, websafe=False):
         normalized_text = normalize(text)
         encoded_text = self._encode_input(text)[0]
 
@@ -207,7 +207,7 @@ class LDA_HAN():
         hidden_sentence_encoding_out = Model(inputs=self.model.input,
                                              outputs=self.model.get_layer('dense_transform_s').output)
         hidden_sentence_encodings = np.squeeze(
-            hidden_sentence_encoding_out.predict(np.expand_dims(encoded_text, 0)), 0)
+            hidden_sentence_encoding_out.predict([np.expand_dims(encoded_text, 0),np.array(doc_topics)]), 0) # np.zeros(shape=[522,425])
         sentence_context = self.model.get_layer('sentence_attention').get_weights()[0]
         u_sattention = np.exp(np.squeeze(np.dot(hidden_sentence_encodings, sentence_context), -1))
         if websafe:
@@ -220,7 +220,9 @@ class LDA_HAN():
 
         return activation_map
 
-    def predict(self, text):
+    def predict(self, text, doc_topics):
 
         encoded_text = self._encode_input(text)
-        return self.model.predict(encoded_text)
+
+
+        return self.model.predict(x=[encoded_text, np.array(doc_topics)])

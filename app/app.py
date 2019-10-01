@@ -10,7 +10,8 @@ from keras import backend as K
 import os
 from utils.normalize import normalize
 from lda_han import LDA_HAN
-
+from utils.lda_gen import lda_train
+from utils.datahelper import Dataset
 SAVED_MODEL_DIR = 'checkpoints'
 SAVED_MODEL_FILENAME = 'lda_HAN_best_1.h5'
 
@@ -18,6 +19,13 @@ app = Flask(__name__)
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
+
+dataset = Dataset()
+dataset.data_reader(hierachical_data=True)
+x, y, word_index, tokenizer = dataset.load_data(hierachical_data=True)
+raw_text = dataset.rawtext
+
+doc_topics, topic_word_dict = lda_train(raw_text, num_topics=425, if_train=False)
 
 K.clear_session()
 h = LDA_HAN()
@@ -45,11 +53,10 @@ def activations():
 
         global graph
         with graph.as_default():
-            activation_maps = h.activation_maps(text, websafe=True)
-            preds = h.predict(text)
-            print(preds)
+            activation_maps = h.activation_maps(text, doc_topics, websafe=True)
+            preds = h.predict(text,doc_topics)
             prediction = float(preds)
-            print(prediction)
+
             data = {
                 'activations': activation_maps,
                 'normalizedText': ntext,
