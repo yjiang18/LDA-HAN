@@ -18,7 +18,7 @@ All results are calculated by the mean of 10-fold cross validation five times on
 | ESRC| 71.81% |
 | LDA-ESRC | **73.69%** |
 | HAN | 75.69% |
-| LDA-HAN | **76.49%** | 
+| LDA-HAN | **76.52%** | 
 
 ## Preparation / Requirements
 
