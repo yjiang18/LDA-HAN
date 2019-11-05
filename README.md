@@ -1,7 +1,7 @@
 # LDA_HAN-for-News-Biased-Detection
 
 This is Keras implementation of the Hierarchical Network with Attention architecture [(Yang et al, 2016)](http://www.cs.cmu.edu/~./hovy/papers/16HLT-hierarchical-attention-networks.pdf).
-Instead of using standard word embedding alone, this work applys a topic-aware word embedding which combines word vectors with word-topic distribution and such distribution is a global weighting of the dimensions of the word-topic vector.
+Instead of using standard word embedding alone, this work applys a topic-aware word embedding which combines word vectors with transposed topic-word distribution and such distribution is a global weighting of the dimensions of the word-topic vector. Once the model got the document representation, it also combines with the document-topic distribution before feeding to softmax at the final prediction.
 
 ## Experiments
 All results are calculated by the mean of 10-fold cross validation five times on the [Hyperpartisan News Detection](https://pan.webis.de/semeval19/semeval19-web/) by-article training set data (645 news articles in total).  
