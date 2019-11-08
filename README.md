@@ -1,4 +1,4 @@
-# LDA_HAN-for-News-Biased-Detection
+# Topic-Aware Hierarchical Document Representation for News Biased Detection
 
 This is Keras implementation of the Hierarchical Network with Attention architecture [(Yang et al, 2016)](http://www.cs.cmu.edu/~./hovy/papers/16HLT-hierarchical-attention-networks.pdf).
 Instead of using standard word embedding alone, this work applys a topic-aware word embedding which combines word vectors with transposed topic-word distribution and such distribution is a global weighting of the dimensions of the word-topic vector. Once the model got the document representation, it also combines with the document-topic distribution before feeding to softmax at the final prediction.
@@ -32,7 +32,7 @@ All results are calculated by the mean of 10-fold cross validation five times on
 Preparation steps:
 1. `mkdir checkpoints data embeddings history lda_stuff` for store trained models, training data set, glove & lda embeddings, training logs, gensim models respectively.
 2. Convert original data xml file to tsv format. (see [this](https://github.com/GateNLP/semeval2019-hyperpartisan-bertha-von-suttner/tree/4b1d74b73247a06ed79e8e7af30923ce6828574a) for how it works).
-3. `python ./utils/lda_gen.py -train True -H True -T 300` for generating lda topic embedding with 300 dimensions.
+3. `python ./utils/lda_gen.py -train True -H True -T 425` for generating lda topic embedding with 425 topics.
 4. `python main.py -train True` for training the model.
 5. `python visulization.py` for building the web application and visualize attention distribution and predictions.
 
